@@ -49,4 +49,3 @@ npm run tauri build
 ## 📝 License
 
 This project is maintained by Gyue2.
-Contact: magicstyle_k@naver.com
