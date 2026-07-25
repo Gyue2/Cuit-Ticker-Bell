@@ -46,8 +46,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tagName: ${{ github.ref_name }}
-          releaseName: 'KIT FAIRY ${{ github.ref_name }}'
-          releaseBody: '?쭦 KIT FAIRY ?곗뒪?ы넲 ???먮룞 鍮뚮뱶 ?꾨즺'
+          releaseName: 'Cuit Ticker Bell ${{ github.ref_name }}'
+          releaseBody: '✨ Cuit Ticker Bell 자동 빌드 완료 ✨'
           releaseDraft: false
           prerelease: false
           args: ${{ matrix.args }}
