@@ -38,7 +38,7 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
 
       - name: Install frontend dependencies
-        run: pnpm install
+        run: pnpm install --no-frozen-lockfile
 
       - name: Build Tauri App & Create Release
         uses: tauri-apps/tauri-action@v0
@@ -47,7 +47,7 @@ jobs:
         with:
           tagName: ${{ github.ref_name }}
           releaseName: 'KIT FAIRY ${{ github.ref_name }}'
-          releaseBody: '🧚 KIT FAIRY 데스크톱 앱 자동 빌드 완료'
+          releaseBody: '?쭦 KIT FAIRY ?곗뒪?ы넲 ???먮룞 鍮뚮뱶 ?꾨즺'
           releaseDraft: false
           prerelease: false
           args: ${{ matrix.args }}
