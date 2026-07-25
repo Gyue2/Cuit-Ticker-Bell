@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Sun, Moon, RefreshCw, Volume2, VolumeX, Zap, ShieldCheck, Activity, Bell, BellOff, Megaphone, MegaphoneOff } from "lucide-react";
+import { Sun, Moon, RefreshCw, Volume2, VolumeX, Zap, ShieldCheck, Activity, Bell, BellOff, Megaphone, MegaphoneOff, Settings } from "lucide-react";
 import { PerfStats } from "../types";
 
 interface HeaderProps {
@@ -22,6 +22,7 @@ interface HeaderProps {
   onToggleTts: () => void;
   autostartEnabled: boolean;
   onToggleAutostart: () => void;
+  onOpenSettings?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -44,6 +45,7 @@ export const Header: React.FC<HeaderProps> = ({
   onToggleTts,
   autostartEnabled,
   onToggleAutostart,
+  onOpenSettings,
 }) => {
   const [countdownMs, setCountdownMs] = useState(intervalMs);
 
@@ -110,100 +112,7 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* Controls */}
         <div className="flex flex-wrap items-center gap-2 w-full md:w-auto justify-between sm:justify-end">
-          {/* Refresh Interval Selector & RSS Safety Indicator */}
-          <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-[#171923] p-1.5 rounded-lg border border-slate-200 dark:border-[#2D3748]">
-            <label htmlFor="poll-interval" className="text-[11px] font-mono font-bold text-slate-700 dark:text-gray-300 pl-1 whitespace-nowrap">
-              화면 갱신:
-            </label>
-            <select
-              id="poll-interval"
-              value={intervalMs}
-              onChange={(e) => onChangeInterval(Number(e.target.value))}
-              className="text-xs font-mono font-bold bg-white dark:bg-[#1A202C] text-slate-800 dark:text-gray-200 px-2 py-1 rounded border border-slate-300 dark:border-[#2D3748] focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer"
-            >
-              <option value={1000}>1초 (초고속 · RSS Safe)</option>
-              <option value={2000}>2초</option>
-              <option value={3000}>3초</option>
-              <option value={5000}>5초</option>
-            </select>
-            <span
-              title="화면을 1초마다 갱신하더라도 백엔드 서버가 NASDAQ RSS를 HTTP 304(캐시) 조건부 요청으로 1초당 1회만 단일 수집하므로 RSS 과부하가 0%입니다."
-              className="hidden lg:inline-flex items-center text-[10px] font-mono font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-1.5 py-0.5 rounded border border-emerald-200 dark:border-emerald-800/50 cursor-help"
-            >
-              🛡️ RSS 100% 안전
-            </span>
-          </div>
-
-          {/* Notification Permission Button (Only show if default/denied) */}
-          {notificationStatus !== "granted" && (
-            <button
-              onClick={onRequestNotification}
-              title="윈도우 바탕화면 알림 허용하기"
-              className="p-2 rounded-lg border border-rose-300 dark:border-rose-500/40 bg-rose-50 dark:bg-rose-500/10 hover:bg-rose-100 dark:hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 transition-all flex items-center gap-1.5 text-xs font-mono font-bold cursor-pointer shadow-sm animate-pulse"
-            >
-              <BellOff className="w-4 h-4" />
-              <span className="hidden sm:inline">알림 권한 필요</span>
-            </button>
-          )}
-
-            {/* Sound Toggle */}
-            <div className="flex items-center gap-1">
-              <button
-                onClick={onToggleSound}
-                title={soundEnabled ? "소리 끄기" : "소리 켜기"}
-                className={`p-2 rounded-lg border transition-all cursor-pointer ${
-                  soundEnabled
-                    ? "bg-blue-50 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-500/30"
-                    : "bg-slate-100 dark:bg-slate-800 text-slate-400 border-slate-200 dark:border-slate-700"
-                }`}
-              >
-                {soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
-              </button>
-              
-              {/* Sound Type Selection */}
-              {soundEnabled && (
-                <select
-                  value={soundType}
-                  onChange={(e) => onChangeSoundType(e.target.value as "A"|"B"|"C")}
-                  className="bg-slate-100 dark:bg-[#1A202C] border border-slate-300 dark:border-[#2D3748] text-slate-700 dark:text-gray-300 rounded px-1.5 py-1 text-xs font-bold focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer"
-                  title="알람 소리 종류 변경"
-                >
-                  <option value="A">소리 A</option>
-                  <option value="B">소리 B</option>
-                  <option value="C">소리 C</option>
-                </select>
-              )}
-            </div>
-
-            {/* TTS Toggle */}
-            <button
-              onClick={onToggleTts}
-              title={ttsEnabled ? "음성 브리핑(TTS) 끄기" : "음성 브리핑(TTS) 켜기"}
-              className={`p-2 rounded-lg border transition-all cursor-pointer ${
-                ttsEnabled
-                  ? "bg-purple-50 dark:bg-purple-500/20 text-purple-600 dark:text-purple-400 border-purple-200 dark:border-purple-500/30"
-                  : "bg-slate-100 dark:bg-slate-800 text-slate-400 border-slate-200 dark:border-slate-700"
-              }`}
-            >
-              {ttsEnabled ? <Megaphone className="w-4 h-4" /> : <MegaphoneOff className="w-4 h-4" />}
-            </button>
-
-            {/* Autostart Toggle (Windows Only) */}
-            {window.__TAURI_INTERNALS__ && (
-              <button
-                onClick={onToggleAutostart}
-                title={autostartEnabled ? "윈도우 시작 시 자동실행 끄기" : "윈도우 시작 시 자동실행 켜기"}
-                className={`px-2.5 py-1.5 rounded-lg border text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-                  autostartEnabled
-                    ? "bg-purple-50 dark:bg-purple-500/20 text-purple-600 dark:text-purple-400 border-purple-200 dark:border-purple-500/30"
-                    : "bg-slate-100 dark:bg-slate-800 text-slate-500 border-slate-200 dark:border-slate-700"
-                }`}
-              >
-                <Zap className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">자동실행</span>
-              </button>
-            )}
-
+          
           {/* Countdown Refresh Button */}
           <button
             onClick={handleManualRefresh}
@@ -227,6 +136,17 @@ export const Header: React.FC<HeaderProps> = ({
               <Moon className="w-4 h-4 text-indigo-600" />
             )}
           </button>
+
+          {/* Settings Button */}
+          {onOpenSettings && (
+            <button
+              onClick={onOpenSettings}
+              title="설정 (Settings)"
+              className="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-[#171923] dark:hover:bg-[#2D3748] text-slate-700 dark:text-gray-300 border border-slate-300 dark:border-[#2D3748] transition-all cursor-pointer"
+            >
+              <Settings className="w-4 h-4" />
+            </button>
+          )}
         </div>
       </div>
 

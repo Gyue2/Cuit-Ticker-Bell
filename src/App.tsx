@@ -12,6 +12,7 @@ import { FilterBar } from "./components/FilterBar";
 import { HaltTable } from "./components/HaltTable";
 import { PopoutTimerView } from "./components/PopoutTimerView";
 import { Toast } from "./components/Toast";
+import { SettingsModal } from "./components/SettingsModal";
 import { playNotificationChime, playResumeChime, initAudioContext, playTTSAnnouncement } from "./utils/sound";
 import { pad2, updateServerTimeOffset, getKitIntervals, getSyncedNow, getHaltCountForSymbolToday } from "./utils/time";
 import { isTauriEnvironment } from "./utils/tauriWindow";
@@ -38,6 +39,7 @@ export default function App() {
   // Application Data & Connectivity State
   const [data, setData] = useState<HaltItem[]>([]);
   const [isFetching, setIsFetching] = useState<boolean>(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
   const [isWsConnected, setIsWsConnected] = useState<boolean>(false);
   const [isPolling, setIsPolling] = useState<boolean>(false);
   const [lastUpdatedMs, setLastUpdatedMs] = useState<number>(Date.now());
@@ -48,7 +50,9 @@ export default function App() {
   const [theme, setTheme] = useState<"dark" | "light">("dark");
   const [intervalMs, setIntervalMs] = useState<number>(1000);
   const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
+  const [chimeVolume, setChimeVolume] = useState<number>(1.0);
   const [ttsEnabled, setTtsEnabled] = useState<boolean>(true);
+  const [ttsVolume, setTtsVolume] = useState<number>(1.0);
   const [soundType, setSoundType] = useState<"A" | "B" | "C">("A");
   const [watchlistOnly, setWatchlistOnly] = useState<boolean>(false);
   const [watchedSymbols, setWatchedSymbols] = useState<Set<string>>(new Set());
@@ -79,14 +83,18 @@ export default function App() {
   const isFirstLoadRef = useRef<boolean>(true);
   const wsRef = useRef<WebSocket | null>(null);
   const pollTimerRef = useRef<NodeJS.Timeout | null>(null);
-  // Use a ref for soundEnabled so handleIncomingData is never recreated when sound is toggled
   const soundEnabledRef = useRef<boolean>(true);
+  const chimeVolumeRef = useRef<number>(1.0);
   const soundTypeRef = useRef<"A" | "B" | "C">("A");
   const ttsEnabledRef = useRef<boolean>(true);
+  const ttsVolumeRef = useRef<number>(1.0);
   const watchedSymbolsRef = useRef<Set<string>>(new Set());
   const ignoredSymbolsRef = useRef<Set<string>>(new Set());
+  
   useEffect(() => { soundEnabledRef.current = soundEnabled; }, [soundEnabled]);
+  useEffect(() => { chimeVolumeRef.current = chimeVolume; }, [chimeVolume]);
   useEffect(() => { ttsEnabledRef.current = ttsEnabled; }, [ttsEnabled]);
+  useEffect(() => { ttsVolumeRef.current = ttsVolume; }, [ttsVolume]);
   useEffect(() => { soundTypeRef.current = soundType; }, [soundType]);
   useEffect(() => { watchedSymbolsRef.current = watchedSymbols; }, [watchedSymbols]);
   useEffect(() => { ignoredSymbolsRef.current = ignoredSymbols; }, [ignoredSymbols]);
@@ -124,7 +132,9 @@ export default function App() {
         if (parsed.theme) setTheme(parsed.theme);
         if (parsed.intervalMs) setIntervalMs(parsed.intervalMs);
         if (typeof parsed.soundEnabled === "boolean") setSoundEnabled(parsed.soundEnabled);
+        if (typeof parsed.chimeVolume === "number") setChimeVolume(parsed.chimeVolume);
         if (typeof parsed.ttsEnabled === "boolean") setTtsEnabled(parsed.ttsEnabled);
+        if (typeof parsed.ttsVolume === "number") setTtsVolume(parsed.ttsVolume);
         if (typeof parsed.watchlistOnly === "boolean") setWatchlistOnly(parsed.watchlistOnly);
         if (Array.isArray(parsed.watchedSymbols)) {
           setWatchedSymbols(new Set(parsed.watchedSymbols));
@@ -163,7 +173,9 @@ export default function App() {
           theme,
           intervalMs,
           soundEnabled,
+          chimeVolume,
           ttsEnabled,
+          ttsVolume,
           watchlistOnly,
           watchedSymbols: Array.from(watchedSymbols),
           ignoredSymbols: Array.from(ignoredSymbols),
@@ -174,7 +186,7 @@ export default function App() {
         console.error("Failed to save settings:", e);
       }
     },
-    [theme, intervalMs, soundEnabled, ttsEnabled, watchlistOnly, watchedSymbols, ignoredSymbols]
+    [theme, intervalMs, soundEnabled, chimeVolume, ttsEnabled, ttsVolume, watchlistOnly, watchedSymbols, ignoredSymbols]
   );
 
   // Autostart init
@@ -350,7 +362,7 @@ export default function App() {
                 // Sound alert
                 if (soundEnabledRef.current) {
                   const isWatched = watchedSymbolsRef.current.has(h.symbol);
-                  playNotificationChime(soundTypeRef.current, isWatched);
+                  playNotificationChime(soundTypeRef.current, isWatched, chimeVolumeRef.current);
                 }
                 // Screen flash
                 setIsFlashing(true);
@@ -359,7 +371,7 @@ export default function App() {
                 
                 // TTS
                 if (ttsEnabledRef.current) {
-                  playTTSAnnouncement(h.symbol, "halted", false);
+                  playTTSAnnouncement(h.symbol, "halted", false, soundEnabledRef.current ? 600 : 0, ttsVolumeRef.current);
                 }
 
                 // Desktop Notification (Tauri native)
@@ -391,10 +403,10 @@ export default function App() {
             notifiedResumesRef.current.add(resumeKey);
             if (!isIgnored) {
               if (soundEnabledRef.current) {
-                playResumeChime(soundTypeRef.current);
+                playResumeChime(soundTypeRef.current, chimeVolumeRef.current);
               }
               if (ttsEnabledRef.current) {
-                playTTSAnnouncement(h.symbol, "resumed", false);
+                playTTSAnnouncement(h.symbol, "resumed", false, soundEnabledRef.current ? 600 : 0, ttsVolumeRef.current);
               }
               showToast(`🔔 ${h.symbol} 거래정지 해제!`, "success");
             }
@@ -559,7 +571,7 @@ export default function App() {
     setSoundEnabled(next);
     saveSettings({ soundEnabled: next });
     if (next) {
-      playNotificationChime();
+      playNotificationChime(soundType, false, chimeVolume);
     }
     showToast(next ? "알림음이 켜졌습니다 🔔 (소리 테스트)" : "알림음이 꺼졌습니다 🔇", "info");
   };
@@ -743,10 +755,32 @@ export default function App() {
           ttsEnabled={ttsEnabled}
           onToggleTts={handleToggleTts}
           perfStats={perfStats}
-          notificationStatus={notificationStatus}
+          notificationStatus={notificationStatus as any}
           onRequestNotification={requestNotificationPermission}
           soundType={soundType}
           onChangeSoundType={setSoundType}
+          autostartEnabled={autostartEnabled}
+          onToggleAutostart={handleToggleAutostart}
+          onOpenSettings={() => setIsSettingsOpen(true)}
+        />
+        
+        <SettingsModal
+          isOpen={isSettingsOpen}
+          onClose={() => setIsSettingsOpen(false)}
+          intervalMs={intervalMs}
+          onChangeInterval={handleChangeInterval}
+          notificationStatus={notificationStatus as any}
+          onRequestNotification={requestNotificationPermission}
+          soundEnabled={soundEnabled}
+          onToggleSound={handleToggleSound}
+          soundType={soundType}
+          onChangeSoundType={setSoundType}
+          chimeVolume={chimeVolume}
+          onChangeChimeVolume={(v) => { setChimeVolume(v); saveSettings({ chimeVolume: v }); }}
+          ttsEnabled={ttsEnabled}
+          onToggleTts={handleToggleTts}
+          ttsVolume={ttsVolume}
+          onChangeTtsVolume={(v) => { setTtsVolume(v); saveSettings({ ttsVolume: v }); }}
           autostartEnabled={autostartEnabled}
           onToggleAutostart={handleToggleAutostart}
         />

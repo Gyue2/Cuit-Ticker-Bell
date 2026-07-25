@@ -51,6 +51,7 @@ export const HaltTable: React.FC<HaltTableProps> = ({
   allData,
   sortConfig,
   onSort,
+  watchedSymbols,
   onToggleWatch,
   ignoredSymbols,
   onToggleIgnore,
