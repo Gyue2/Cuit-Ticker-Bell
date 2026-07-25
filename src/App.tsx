@@ -12,7 +12,7 @@ import { FilterBar } from "./components/FilterBar";
 import { HaltTable } from "./components/HaltTable";
 import { PopoutTimerView } from "./components/PopoutTimerView";
 import { Toast } from "./components/Toast";
-import { playNotificationChime, playResumeChime, initAudioContext } from "./utils/sound";
+import { playNotificationChime, playResumeChime, initAudioContext, playTTSAnnouncement } from "./utils/sound";
 import { pad2, updateServerTimeOffset, getKitIntervals, getSyncedNow, getHaltCountForSymbolToday } from "./utils/time";
 import { isTauriEnvironment } from "./utils/tauriWindow";
 import { isPermissionGranted, requestPermission, sendNotification, onAction } from "@tauri-apps/plugin-notification";
@@ -48,6 +48,7 @@ export default function App() {
   const [theme, setTheme] = useState<"dark" | "light">("dark");
   const [intervalMs, setIntervalMs] = useState<number>(1000);
   const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
+  const [ttsEnabled, setTtsEnabled] = useState<boolean>(true);
   const [soundType, setSoundType] = useState<"A" | "B" | "C">("A");
   const [watchlistOnly, setWatchlistOnly] = useState<boolean>(false);
   const [watchedSymbols, setWatchedSymbols] = useState<Set<string>>(new Set());
@@ -81,9 +82,11 @@ export default function App() {
   // Use a ref for soundEnabled so handleIncomingData is never recreated when sound is toggled
   const soundEnabledRef = useRef<boolean>(true);
   const soundTypeRef = useRef<"A" | "B" | "C">("A");
+  const ttsEnabledRef = useRef<boolean>(true);
   const watchedSymbolsRef = useRef<Set<string>>(new Set());
   const ignoredSymbolsRef = useRef<Set<string>>(new Set());
   useEffect(() => { soundEnabledRef.current = soundEnabled; }, [soundEnabled]);
+  useEffect(() => { ttsEnabledRef.current = ttsEnabled; }, [ttsEnabled]);
   useEffect(() => { soundTypeRef.current = soundType; }, [soundType]);
   useEffect(() => { watchedSymbolsRef.current = watchedSymbols; }, [watchedSymbols]);
   useEffect(() => { ignoredSymbolsRef.current = ignoredSymbols; }, [ignoredSymbols]);
@@ -121,6 +124,7 @@ export default function App() {
         if (parsed.theme) setTheme(parsed.theme);
         if (parsed.intervalMs) setIntervalMs(parsed.intervalMs);
         if (typeof parsed.soundEnabled === "boolean") setSoundEnabled(parsed.soundEnabled);
+        if (typeof parsed.ttsEnabled === "boolean") setTtsEnabled(parsed.ttsEnabled);
         if (typeof parsed.watchlistOnly === "boolean") setWatchlistOnly(parsed.watchlistOnly);
         if (Array.isArray(parsed.watchedSymbols)) {
           setWatchedSymbols(new Set(parsed.watchedSymbols));
@@ -159,6 +163,7 @@ export default function App() {
           theme,
           intervalMs,
           soundEnabled,
+          ttsEnabled,
           watchlistOnly,
           watchedSymbols: Array.from(watchedSymbols),
           ignoredSymbols: Array.from(ignoredSymbols),
@@ -169,7 +174,7 @@ export default function App() {
         console.error("Failed to save settings:", e);
       }
     },
-    [theme, intervalMs, soundEnabled, watchlistOnly, watchedSymbols, ignoredSymbols]
+    [theme, intervalMs, soundEnabled, ttsEnabled, watchlistOnly, watchedSymbols, ignoredSymbols]
   );
 
   // Autostart init
@@ -351,6 +356,11 @@ export default function App() {
                 setIsFlashing(true);
                 setTimeout(() => setIsFlashing(false), 800);
                 showToast(`🚀 ${h.symbol} 킷(거래정지) 신규 감지!`, "info");
+                
+                // TTS
+                if (ttsEnabledRef.current) {
+                  playTTSAnnouncement(h.symbol, "halted", false);
+                }
 
                 // Desktop Notification (Tauri native)
                 if (isTauriEnvironment()) {
@@ -382,6 +392,9 @@ export default function App() {
             if (!isIgnored) {
               if (soundEnabledRef.current) {
                 playResumeChime(soundTypeRef.current);
+              }
+              if (ttsEnabledRef.current) {
+                playTTSAnnouncement(h.symbol, "resumed", false);
               }
               showToast(`🔔 ${h.symbol} 거래정지 해제!`, "success");
             }
@@ -549,6 +562,13 @@ export default function App() {
       playNotificationChime();
     }
     showToast(next ? "알림음이 켜졌습니다 🔔 (소리 테스트)" : "알림음이 꺼졌습니다 🔇", "info");
+  };
+
+  const handleToggleTts = () => {
+    const next = !ttsEnabled;
+    setTtsEnabled(next);
+    saveSettings({ ttsEnabled: next });
+    showToast(next ? "TTS 안내가 켜졌습니다." : "TTS 안내가 꺼졌습니다.", "info");
   };
 
   const handleToggleWatchlistOnly = () => {
@@ -720,6 +740,8 @@ export default function App() {
           onRefresh={fetchHalts}
           soundEnabled={soundEnabled}
           onToggleSound={handleToggleSound}
+          ttsEnabled={ttsEnabled}
+          onToggleTts={handleToggleTts}
           perfStats={perfStats}
           notificationStatus={notificationStatus}
           onRequestNotification={requestNotificationPermission}

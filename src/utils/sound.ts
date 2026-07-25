@@ -123,3 +123,29 @@ function playNote(
     osc.stop(start + duration);
   } catch (e) {}
 }
+
+/** TTS(음성 합성) 브리핑 */
+export function playTTSAnnouncement(symbol: string, status: "halted" | "resumed", extension: boolean = false) {
+  if (!("speechSynthesis" in window)) return;
+  
+  let text = "";
+  if (status === "halted") {
+    if (extension) {
+      text = `${symbol}, 정지 연장.`;
+    } else {
+      text = `${symbol}, 변동성 정지.`; 
+    }
+  } else {
+    text = `${symbol}, 거래 재개.`;
+  }
+  
+  // Create an utterance object
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = "ko-KR"; // Korean
+  utterance.rate = 1.1; // Slightly faster
+  utterance.pitch = 1.0; 
+  
+  // Cancel any ongoing speech to prioritize the latest alert
+  window.speechSynthesis.cancel();
+  window.speechSynthesis.speak(utterance);
+}

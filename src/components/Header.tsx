@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Sun, Moon, RefreshCw, Volume2, VolumeX, Zap, ShieldCheck, Activity, Bell, BellOff } from "lucide-react";
+import { Sun, Moon, RefreshCw, Volume2, VolumeX, Zap, ShieldCheck, Activity, Bell, BellOff, Megaphone, MegaphoneOff } from "lucide-react";
 import { PerfStats } from "../types";
 
 interface HeaderProps {
@@ -18,6 +18,8 @@ interface HeaderProps {
   onRequestNotification: () => void;
   soundType: "A" | "B" | "C";
   onChangeSoundType: (val: "A" | "B" | "C") => void;
+  ttsEnabled: boolean;
+  onToggleTts: () => void;
   autostartEnabled: boolean;
   onToggleAutostart: () => void;
 }
@@ -38,6 +40,8 @@ export const Header: React.FC<HeaderProps> = ({
   onRequestNotification,
   soundType,
   onChangeSoundType,
+  ttsEnabled,
+  onToggleTts,
   autostartEnabled,
   onToggleAutostart,
 }) => {
@@ -170,6 +174,19 @@ export const Header: React.FC<HeaderProps> = ({
                 </select>
               )}
             </div>
+
+            {/* TTS Toggle */}
+            <button
+              onClick={onToggleTts}
+              title={ttsEnabled ? "음성 브리핑(TTS) 끄기" : "음성 브리핑(TTS) 켜기"}
+              className={`p-2 rounded-lg border transition-all cursor-pointer ${
+                ttsEnabled
+                  ? "bg-purple-50 dark:bg-purple-500/20 text-purple-600 dark:text-purple-400 border-purple-200 dark:border-purple-500/30"
+                  : "bg-slate-100 dark:bg-slate-800 text-slate-400 border-slate-200 dark:border-slate-700"
+              }`}
+            >
+              {ttsEnabled ? <Megaphone className="w-4 h-4" /> : <MegaphoneOff className="w-4 h-4" />}
+            </button>
 
             {/* Autostart Toggle (Windows Only) */}
             {window.__TAURI_INTERNALS__ && (
