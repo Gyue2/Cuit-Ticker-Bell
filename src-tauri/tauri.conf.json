@@ -1,1 +1,46 @@
-ൻ ∠猤档浥≡›栢瑴獰⼺猯档浥⹡慴牵⹩灡⽰潣普杩㈯Ⱒ਍†瀢潲畤瑣慎敭㨢∠畃瑩吠捩敫⁲敂汬Ⱒ਍†瘢牥楳湯㨢∠⸱⸰∲ബ ∠摩湥楴楦牥㨢∠潣⹭楫晴楡祲琮捩敫≲ബ ∠畢汩≤›ൻ †∠敤啶汲㨢∠瑨灴⼺氯捯污潨瑳㌺〰∰ബ †∠牦湯整摮楄瑳㨢∠⸮搯獩≴ബ †∠敢潦敲敄䍶浯慭摮㨢∠灮⁭畲⁮敤≶ബ †∠敢潦敲畂汩䍤浯慭摮㨢∠灮⁭畲⁮畢汩≤਍†ⱽ਍†愢灰㨢笠਍††眢湩潤獷㨢嬠਍†††ൻ †††∠楴汴≥›䌢極⁴楔正牥䈠汥⁬‭㼿뀿믬₤닫⠿돫㾀놄㼠‿谿ꛫ㾯Ⱒ਍††††眢摩桴㨢ㄠ㠲ⰰ਍††††栢楥桧≴›㐸ⰰ਍††††爢獥穩扡敬㨢琠畲ⱥ਍††††昢汵獬牣敥≮›慦獬ⱥ਍††††挢湥整≲›牴敵਍†††ൽ †崠ബ †∠敳畣楲祴㨢笠਍†††挢灳㨢渠汵൬ †素਍†ⱽ਍†戢湵汤≥›ൻ †∠捡楴敶㨢琠畲ⱥ਍††琢牡敧獴㨢∠污≬ബ †∠捩湯㨢嬠਍†††椢潣獮㌯砲㈳瀮杮Ⱒ਍†††椢潣獮ㄯ㠲ㅸ㠲瀮杮Ⱒ਍†††椢潣獮ㄯ㠲ㅸ㠲㉀⹸湰≧ബ ††∠捩湯⽳捩湯椮湣≳ബ ††∠捩湯⽳捩湯椮潣ഢ †崠਍†ⱽ਍†瀢畬楧獮㨢笠਍††產摰瑡牥㨢笠਍†††攢摮潰湩獴㨢嬠਍††††栢瑴獰⼺术瑩畨⹢潣⽭祇敵⼲畃瑩吭捩敫⵲敂汬爯汥慥敳⽳慬整瑳搯睯汮慯⽤慬整瑳樮潳≮਍†††ⱝ਍†††瀢扵敫≹›搢㕗挰噮摺噇䥫乇扶ㅗ扬兮䤶ㅇ扰汭慺摗䥵䉈失硭奰䉹婲歘䤶充佺奅䴳䕺䴵捔刱婅佅䵕啋摬奔㥹䵗框坈㥅䵑䙄匰案兡砲摮啖她䙫慸乺䵨漳娲摫坕䙫摶䩘吶娰奃灗奙䙪卖㄰剨唰≋਍††ൽ 素਍ൽ
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Cuit Ticker Bell",
+  "version": "1.0.2",
+  "identifier": "com.kitfairy.ticker",
+  "build": {
+    "devUrl": "http://localhost:3000",
+    "frontendDist": "../dist",
+    "beforeDevCommand": "npm run dev",
+    "beforeBuildCommand": "npm run build"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "Cuit Ticker Bell - 미국 주식 변동성 완화 알리미",
+        "width": 1280,
+        "height": 840,
+        "resizable": true,
+        "fullscreen": false,
+        "center": true
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ]
+  },
+  "plugins": {
+    "updater": {
+      "endpoints": [
+        "https://github.com/Gyue2/Cuit-Ticker-Bell/releases/latest/download/latest.json"
+      ],
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEQzOEY3MzE5MTc1REZEOUMKUldTYy9WMFhHWE9QMDF0SHhaQ2xndVUyYkFxazNhM3o2ZkdUWkFvdXJ6T0ZCYWpYYjFVS01hR0UK"
+    }
+  }
+}
