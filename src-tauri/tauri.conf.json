@@ -1,0 +1,46 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Cuit Ticker Bell",
+  "version": "1.0.1",
+  "identifier": "com.kitfairy.ticker",
+  "build": {
+    "devUrl": "http://localhost:3000",
+    "frontendDist": "../dist",
+    "beforeDevCommand": "npm run dev",
+    "beforeBuildCommand": "npm run build"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "Cuit Ticker Bell - 킷 티커 벨 (변동성 정지 알리미)",
+        "width": 1280,
+        "height": 840,
+        "resizable": true,
+        "fullscreen": false,
+        "center": true
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ]
+  },
+  "plugins": {
+    "updater": {
+      "endpoints": [
+        "https://github.com/Gyue2/Cuit-Ticker-Bell/releases/latest/download/latest.json"
+      ],
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEQzOEY3MzE5MTc1REZEOUMKUldTYy9WMFhHWE9QMDF0SHhaQ2xndVUyYkFxazNhM3o2ZkdUWkFvdXJ6T0ZCYWpYYjFVS01hR0UK"
+    }
+  }
+}

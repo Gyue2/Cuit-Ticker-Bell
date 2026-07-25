@@ -1,0 +1,23 @@
+[package]
+name = "cuit-ticker-bell"
+version = "1.0.0"
+description = "Cuit Ticker Bell (CTB) - Real-time Volatility Halt (LULD) Monitor"
+authors = ["CTB Team"]
+edition = "2021"
+
+[build-dependencies]
+tauri-build = { version = "2.0", features = [] }
+
+[dependencies]
+tauri = { version = "2.0", features = ["tray-icon"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+reqwest = { version = "0.12", features = ["rustls-tls", "json"] }
+tokio = { version = "1", features = ["full"] }
+quick-xml = { version = "0.31", features = ["serialize"] }
+chrono = { version = "0.4", features = ["serde"] }
+chrono-tz = "0.9"
+tauri-plugin-notification = "2.3.3"
+tauri-plugin-autostart = "2.5.1"
+tauri-plugin-updater = "2.10.1"
+tauri-plugin-process = "2.3.1"

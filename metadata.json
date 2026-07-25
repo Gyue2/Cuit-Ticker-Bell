@@ -1,0 +1,6 @@
+{
+  "name": "킷 요정 - 실시간 미국 주식 정지",
+  "description": "나스닥 공식 RSS 피드 기반 미국 주식(NASDAQ, NYSE, AMEX) 실시간 거래 정지 및 킷(LULD) 타이머 모니터링 서비스",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
