@@ -179,6 +179,17 @@ export default function App() {
     }
   }, []);
 
+  // Check for post-update notes
+  useEffect(() => {
+    const notes = localStorage.getItem("cuit_update_notes");
+    if (notes) {
+      setTimeout(() => {
+        window.alert(`🎉 앱이 성공적으로 업데이트되었습니다!\n\n[업데이트 내용]\n${notes}`);
+        localStorage.removeItem("cuit_update_notes");
+      }, 500);
+    }
+  }, []);
+
   // Auto-Updater check on mount
   useEffect(() => {
     const checkForUpdates = async () => {
@@ -186,12 +197,10 @@ export default function App() {
       try {
         const update = await check();
         if (update) {
-          const confirmInstall = await window.confirm(`새 버전(${update.version})이 출시되었습니다!\n지금 바로 다운로드 및 설치하시겠습니까?\n\n(참고: 프로그램이 자동으로 재시작됩니다.)`);
-          if (confirmInstall) {
-            showToast("업데이트 다운로드 중...", "info");
-            await update.downloadAndInstall();
-            await relaunch();
-          }
+          showToast("새 버전 업데이트를 백그라운드에서 설치 중입니다...", "info");
+          await update.downloadAndInstall();
+          localStorage.setItem("cuit_update_notes", update.body || "기능 개선 및 안정성이 향상되었습니다.");
+          await relaunch();
         }
       } catch (err) {
         console.error("Failed to check for updates:", err);
