@@ -30,6 +30,9 @@ interface SettingsModalProps {
   // Autostart
   autostartEnabled: boolean;
   onToggleAutostart: () => void;
+  
+  // Update
+  updateProgress?: { status: string; progress: number } | null;
 }
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({
@@ -51,6 +54,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   onChangeTtsVolume,
   autostartEnabled,
   onToggleAutostart,
+  updateProgress,
 }) => {
   const [appVersion, setAppVersion] = useState<string>("1.0.5");
 
@@ -238,9 +242,17 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         
         {/* Footer */}
         <div className="px-6 py-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/30 flex items-center justify-between">
-          <span className="text-xs font-mono font-bold text-slate-400 dark:text-slate-500">
-            v{appVersion}
-          </span>
+          <div className="flex items-center gap-3">
+            <span className="text-xs font-mono font-bold text-slate-400 dark:text-slate-500">
+              v{appVersion}
+            </span>
+            {updateProgress && (
+              <div className="flex items-center gap-2 text-[10px] text-purple-600 dark:text-purple-400 font-bold bg-purple-100 dark:bg-purple-900/30 px-2 py-1 rounded-md">
+                <span className="animate-pulse">{updateProgress.status}</span>
+                <span className="font-mono">{Math.round(updateProgress.progress)}%</span>
+              </div>
+            )}
+          </div>
           <button
             onClick={onClose}
             className="px-6 py-2 bg-slate-800 hover:bg-slate-700 dark:bg-slate-200 dark:hover:bg-white text-white dark:text-slate-900 rounded-xl text-sm font-bold transition-colors shadow-sm"

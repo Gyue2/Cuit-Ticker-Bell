@@ -60,6 +60,9 @@ export default function App() {
   const [notificationStatus, setNotificationStatus] = useState<NotificationPermission>("default");
   const [isFlashing, setIsFlashing] = useState(false);
   const [autostartEnabled, setAutostartEnabled] = useState(false);
+  
+  // App Update state
+  const [updateProgress, setUpdateProgress] = useState<{ status: string; progress: number } | null>(null);
 
   // Filter & Search State
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -218,8 +221,28 @@ export default function App() {
       try {
         const update = await check();
         if (update) {
-          showToast("새 버전 업데이트를 백그라운드에서 설치 중입니다...", "info");
-          await update.downloadAndInstall();
+          showToast("새 버전 업데이트를 백그라운드에서 다운로드 중입니다...", "info");
+          let contentLength = 0;
+          let downloaded = 0;
+          
+          await update.downloadAndInstall((event) => {
+            switch (event.event) {
+              case 'Started':
+                contentLength = event.data.contentLength || 0;
+                setUpdateProgress({ status: '다운로드 중', progress: 0 });
+                break;
+              case 'Progress':
+                downloaded += event.data.chunkLength;
+                if (contentLength > 0) {
+                  setUpdateProgress({ status: '다운로드 중', progress: (downloaded / contentLength) * 100 });
+                }
+                break;
+              case 'Finished':
+                setUpdateProgress({ status: '설치 준비 완료', progress: 100 });
+                break;
+            }
+          });
+          
           localStorage.setItem("cuit_update_notes", update.body || "기능 개선 및 안정성이 향상되었습니다.");
           await relaunch();
         }
@@ -800,6 +823,7 @@ export default function App() {
           onChangeTtsVolume={(v) => { setTtsVolume(v); saveSettings({ ttsVolume: v }); }}
           autostartEnabled={autostartEnabled}
           onToggleAutostart={handleToggleAutostart}
+          updateProgress={updateProgress}
         />
 
         {/* Stats Summary Cards */}
