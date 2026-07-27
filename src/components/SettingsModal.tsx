@@ -56,7 +56,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   onToggleAutostart,
   updateProgress,
 }) => {
-  const [appVersion, setAppVersion] = useState<string>("1.0.5");
+  const [appVersion, setAppVersion] = useState<string>("1.0.6");
 
   useEffect(() => {
     if ((window as any).__TAURI_INTERNALS__) {
