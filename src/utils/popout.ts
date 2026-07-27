@@ -18,12 +18,21 @@ export async function openPopoutTimerWindow(item: HaltItem) {
   // Use the root URL with URL query parameters
   const url = `/?view=timer&${params.toString()}`;
 
+  // Track that this symbol has an active/tracked popout
+  try {
+    const existing = JSON.parse(localStorage.getItem("trackedPopouts") || "[]");
+    if (!existing.includes(item.symbol)) {
+      existing.push(item.symbol);
+      localStorage.setItem("trackedPopouts", JSON.stringify(existing));
+    }
+  } catch (e) {}
+
   if (isTauriEnvironment()) {
-    const success = await createTauriPopoutWindow(windowLabel, url, title, 300, 200);
+    const success = await createTauriPopoutWindow(windowLabel, url, title, 240, 160);
     if (success) return;
   }
 
-  const features = "width=420,height=620,resizable=yes,scrollbars=yes,status=no,toolbar=no,menubar=no,location=no";
+  const features = "width=240,height=160,resizable=yes,scrollbars=yes,status=no,toolbar=no,menubar=no,location=no";
   window.open(url, windowLabel, features);
 }
 

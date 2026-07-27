@@ -38,7 +38,7 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
 
       - name: Install frontend dependencies
-        run: pnpm install --no-frozen-lockfile
+        run: pnpm install
 
       - name: Build Tauri App & Create Release
         uses: tauri-apps/tauri-action@v0
@@ -46,8 +46,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tagName: ${{ github.ref_name }}
-          releaseName: 'Cuit Ticker Bell ${{ github.ref_name }}'
-          releaseBody: '✨ Cuit Ticker Bell 자동 빌드 완료 ✨'
+          releaseName: 'KIT FAIRY ${{ github.ref_name }}'
+          releaseBody: '🧚 KIT FAIRY 데스크톱 앱 자동 빌드 완료'
           releaseDraft: false
           prerelease: false
           args: ${{ matrix.args }}

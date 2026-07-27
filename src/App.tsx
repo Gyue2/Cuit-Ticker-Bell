@@ -15,7 +15,7 @@ import { Toast } from "./components/Toast";
 import { SettingsModal } from "./components/SettingsModal";
 import { playNotificationChime, playResumeChime, initAudioContext, playTTSAnnouncement } from "./utils/sound";
 import { pad2, updateServerTimeOffset, getKitIntervals, getSyncedNow, getHaltCountForSymbolToday } from "./utils/time";
-import { isTauriEnvironment } from "./utils/tauriWindow";
+import { isTauriEnvironment, createTauriPopoutWindow } from "./utils/tauriWindow";
 import { isPermissionGranted, requestPermission, sendNotification, onAction } from "@tauri-apps/plugin-notification";
 import { enable as autostartEnable, disable as autostartDisable, isEnabled as autostartIsEnabled } from "@tauri-apps/plugin-autostart";
 import { generateKitCopyText } from "./utils/copyTextGenerator";
@@ -23,7 +23,6 @@ import { listen } from "@tauri-apps/api/event";
 import { invoke } from "@tauri-apps/api/core";
 import { check } from "@tauri-apps/plugin-updater";
 import { relaunch } from "@tauri-apps/plugin-process";
-
 const SETTINGS_KEY = "kitFairySettings_v2";
 
 export default function App() {
@@ -98,6 +97,11 @@ export default function App() {
   useEffect(() => { soundTypeRef.current = soundType; }, [soundType]);
   useEffect(() => { watchedSymbolsRef.current = watchedSymbols; }, [watchedSymbols]);
   useEffect(() => { ignoredSymbolsRef.current = ignoredSymbols; }, [ignoredSymbols]);
+
+  // Clear tracked popouts on app startup
+  useEffect(() => {
+    localStorage.removeItem("trackedPopouts");
+  }, []);
 
   // Global user interaction listener to unlock Web Audio API Context
   useEffect(() => {
@@ -286,12 +290,8 @@ export default function App() {
               // Open Timer Popout Widget for active halts
               const h = dataRef.current.find(item => item.symbol === symbol);
               if (h) {
-                const url = `/?timer-only=1&symbol=${encodeURIComponent(h.symbol)}&name=${encodeURIComponent(h.name)}&market=${encodeURIComponent(h.market)}&haltedAt=${h.halted_at_epoch_ms || 0}`;
-                invoke("open_popout", {
-                  label: `timer-${h.symbol}-${Date.now()}`,
-                  url,
-                  title: `${h.symbol} - Cuit Ticker Bell`
-                }).catch(console.error);
+                const url = `/?view=timer&symbol=${encodeURIComponent(h.symbol)}&name=${encodeURIComponent(h.name)}&market=${encodeURIComponent(h.market)}&haltedAt=${h.halted_at_epoch_ms || 0}`;
+                createTauriPopoutWindow(`timer-${h.symbol}-${Date.now()}`, url, `${h.symbol} - Cuit Ticker Bell`, 240, 160);
                 return;
               }
             }
@@ -341,12 +341,17 @@ export default function App() {
 
       if (isFirstLoadRef.current) {
         // Seed ALL currently known halt IDs so we never alert on them
+        const seen = new Set<string>();
         newItems.forEach((h) => {
           knownHaltsRef.current.add(h.id);
-          statusMapRef.current.set(h.symbol, h.status);
+          if (!seen.has(h.symbol)) {
+            statusMapRef.current.set(h.symbol, h.status);
+            seen.add(h.symbol);
+          }
         });
         isFirstLoadRef.current = false;
       } else {
+        const seen = new Set<string>();
         newItems.forEach((h) => {
           // Detect new volatility halts (킷) only — no resume notification
           if (!knownHaltsRef.current.has(h.id)) {
@@ -374,19 +379,31 @@ export default function App() {
                   playTTSAnnouncement(h.symbol, "halted", false, soundEnabledRef.current ? 600 : 0, ttsVolumeRef.current);
                 }
 
-                // Desktop Notification (Tauri native)
+                // Desktop Notification & Auto-popout (Tauri native)
                 if (isTauriEnvironment()) {
                   sendNotification({
                     title: `🧚 ${h.symbol} 킷 발동!`,
                     body: `${h.name} (${h.market}) — ${h.reasons[0]?.title || code}`,
                   });
+                  
+                  // Auto open popout timer widget only if the user has manually opened it before in this session
+                  try {
+                    const existing = JSON.parse(localStorage.getItem("trackedPopouts") || "[]");
+                    if (existing.includes(h.symbol)) {
+                      const url = `/?view=timer&symbol=${encodeURIComponent(h.symbol)}&name=${encodeURIComponent(h.name)}&market=${encodeURIComponent(h.market)}&haltedAt=${h.halted_at_epoch_ms || 0}&reason=${encodeURIComponent(code)}`;
+                      createTauriPopoutWindow(`timer-${h.symbol}-${Date.now()}`, url, `${h.symbol} - Cuit Ticker Bell`, 240, 160);
+                    }
+                  } catch(e) {}
                 }
               }
             }
           }
 
-          // Track status changes (for popout auto-close, etc.)
-          statusMapRef.current.set(h.symbol, h.status);
+          // Track status changes (for popout auto-close, etc.) only for the newest item of each symbol
+          if (!seen.has(h.symbol)) {
+            statusMapRef.current.set(h.symbol, h.status);
+            seen.add(h.symbol);
+          }
         });
       }
 
@@ -402,12 +419,12 @@ export default function App() {
           if (!notifiedResumesRef.current.has(resumeKey)) {
             notifiedResumesRef.current.add(resumeKey);
             if (!isIgnored) {
-              if (soundEnabledRef.current) {
-                playResumeChime(soundTypeRef.current, chimeVolumeRef.current);
-              }
-              if (ttsEnabledRef.current) {
-                playTTSAnnouncement(h.symbol, "resumed", false, soundEnabledRef.current ? 600 : 0, ttsVolumeRef.current);
-              }
+              try {
+                const existing = JSON.parse(localStorage.getItem("trackedPopouts") || "[]");
+                if (existing.includes(h.symbol) && soundEnabledRef.current) {
+                  playResumeChime(soundTypeRef.current, chimeVolumeRef.current);
+                }
+              } catch (e) {}
               showToast(`🔔 ${h.symbol} 거래정지 해제!`, "success");
             }
           }

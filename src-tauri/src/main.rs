@@ -342,9 +342,13 @@ async fn parse_and_update(app_handle: &AppHandle, xml_text: &str) {
                     let quote_epoch = parse_ny_to_epoch(&res_date, &res_quote);
                     let trade_epoch = parse_ny_to_epoch(&res_date, &res_trade);
 
+                    let code_upper = code.trim().to_uppercase();
+                    let is_luld = code_upper == "LUDP" || code_upper == "LUDT" || code_upper == "M" || code_upper == "LU" || code_upper == "DP";
+                    let grace_ms = if is_luld { 20000 } else { 0 };
+
                     let mut status = "halted".to_string();
                     if let Some(t_epoch) = trade_epoch {
-                        if now >= t_epoch { status = "resumed".to_string(); }
+                        if now >= t_epoch + grace_ms { status = "resumed".to_string(); }
                     } else if let Some(q_epoch) = quote_epoch {
                         if let Some(h_epoch) = halted_epoch {
                             if q_epoch > h_epoch + 1000 && now >= q_epoch {
@@ -469,10 +473,13 @@ fn open_popout(app: tauri::AppHandle, label: String, url: String, title: String)
         return;
     }
     
+    // Tauri v2 WebviewUrl::App expects a PathBuf
+    let webview_url = tauri::WebviewUrl::App(std::path::PathBuf::from(url));
+    
     let _ = tauri::WebviewWindowBuilder::new(
         &app,
         label,
-        tauri::WebviewUrl::App(Default::default())
+        webview_url
     )
     .title(title)
     .inner_size(420.0, 620.0)
@@ -504,6 +511,12 @@ fn main() {
     };
 
     tauri::Builder::default()
+        .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
+            if let Some(window) = app.get_webview_window("main") {
+                let _ = window.show();
+                let _ = window.set_focus();
+            }
+        }))
         .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_autostart::init(

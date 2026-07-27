@@ -353,7 +353,10 @@ async function pollNasdaqRss() {
         const tradeEpoch = resTradeStr ? parseNYToEpoch(item.ResumptionDate || item.HaltDate, resTradeStr) : null;
 
         let status: "halted" | "resumed" | "quote_resumed" = "halted";
-        if (tradeEpoch && now >= tradeEpoch) {
+        const isLULD = ["LUDP", "LUDT", "M", "LU", "DP"].includes((code || "").toUpperCase().trim());
+        const graceMs = isLULD ? 20000 : 0; // 20s grace for volatility halts to allow exchange extension
+
+        if (tradeEpoch && now >= tradeEpoch + graceMs) {
           status = "resumed";
         } else if (quoteEpoch && haltedEpoch && quoteEpoch > haltedEpoch + 1000 && now >= quoteEpoch) {
           status = "quote_resumed";

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Settings, Volume2, VolumeX, Megaphone, MegaphoneOff, Zap, BellOff, X } from 'lucide-react';
 
 interface SettingsModalProps {
@@ -52,6 +52,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   autostartEnabled,
   onToggleAutostart,
 }) => {
+  const [appVersion, setAppVersion] = useState<string>("1.0.3");
+
+  useEffect(() => {
+    if ((window as any).__TAURI_INTERNALS__) {
+      import('@tauri-apps/api/app').then(m => m.getVersion()).then(setAppVersion).catch(() => {});
+    }
+  }, []);
+
   if (!isOpen) return null;
 
   return (
@@ -186,7 +194,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             
             <div className="space-y-3">
               {/* Autostart */}
-              {window.__TAURI_INTERNALS__ && (
+              {(window as any).__TAURI_INTERNALS__ && (
                 <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-[#2D3748]/30 border border-slate-100 dark:border-slate-700/50">
                   <div className="flex flex-col">
                     <span className="text-sm font-bold text-slate-700 dark:text-slate-300">윈도우 시작 시 자동실행</span>
@@ -229,7 +237,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         </div>
         
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/30 flex justify-end">
+        <div className="px-6 py-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/30 flex items-center justify-between">
+          <span className="text-xs font-mono font-bold text-slate-400 dark:text-slate-500">
+            v{appVersion}
+          </span>
           <button
             onClick={onClose}
             className="px-6 py-2 bg-slate-800 hover:bg-slate-700 dark:bg-slate-200 dark:hover:bg-white text-white dark:text-slate-900 rounded-xl text-sm font-bold transition-colors shadow-sm"
@@ -241,3 +252,4 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     </div>
   );
 };
+

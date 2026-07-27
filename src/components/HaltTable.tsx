@@ -105,7 +105,12 @@ export const HaltTable: React.FC<HaltTableProps> = ({
           if (currentNow >= boundaryEpoch && !playedBoundariesRef.current.has(key)) {
             playedBoundariesRef.current.add(key);
             if (soundEnabled) {
-              playResumeChime();
+              try {
+                const existing = JSON.parse(localStorage.getItem("trackedPopouts") || "[]");
+                if (existing.includes(h.symbol)) {
+                  playResumeChime();
+                }
+              } catch (e) {}
             }
             if (onRefresh) onRefresh();
           }
@@ -545,14 +550,18 @@ export const HaltTable: React.FC<HaltTableProps> = ({
         let targetM = 5;
 
         if (hasKitTimer && haltedEpoch) {
-          while (haltedEpoch + targetM * 60 * 1000 <= nowMs) {
+          const GRACE_PERIOD_MS = 20000;
+          while (haltedEpoch + targetM * 60 * 1000 + GRACE_PERIOD_MS <= nowMs) {
             targetM += 5;
           }
           const targetEpoch = haltedEpoch + targetM * 60 * 1000;
           const rem = remainingMs(targetEpoch);
           remTimeStr = fmtMinSecFromMs(rem);
 
-          if (rem < 60 * 1000) {
+          if (rem === 0) {
+            remTimeStr = "확인 중..";
+            kitGlowClass = "bg-purple-100 dark:bg-purple-500/20 text-purple-700 dark:text-purple-300 border-purple-300 dark:border-purple-500/50 animate-pulse";
+          } else if (rem < 60 * 1000) {
             kitGlowClass = "bg-rose-100 dark:bg-rose-500/20 text-rose-700 dark:text-rose-300 border-rose-300 dark:border-rose-500/50 animate-pulse";
           } else if (rem < 180 * 1000) {
             kitGlowClass = "bg-amber-100 dark:bg-amber-500/20 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-500/50";

@@ -124,29 +124,32 @@ export const Header: React.FC<HeaderProps> = ({
             <span className="font-mono">{isFetching ? "갱신 중..." : `${remainingSec}s`}</span>
           </button>
 
-          {/* Theme Toggle Button */}
-          <button
-            onClick={onToggleTheme}
-            title={theme === "dark" ? "라이트 모드로 변경" : "다크 모드로 변경"}
-            className="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-[#171923] dark:hover:bg-[#2D3748] text-slate-700 dark:text-gray-300 border border-slate-300 dark:border-[#2D3748] transition-all cursor-pointer"
-          >
-            {theme === "dark" ? (
-              <Sun className="w-4 h-4 text-amber-400" />
-            ) : (
-              <Moon className="w-4 h-4 text-indigo-600" />
-            )}
-          </button>
-
-          {/* Settings Button */}
-          {onOpenSettings && (
+          {/* Theme and Settings Group */}
+          <div className="flex items-center gap-2">
+            {/* Theme Toggle Button */}
             <button
-              onClick={onOpenSettings}
-              title="설정 (Settings)"
+              onClick={onToggleTheme}
+              title={theme === "dark" ? "라이트 모드로 변경" : "다크 모드로 변경"}
               className="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-[#171923] dark:hover:bg-[#2D3748] text-slate-700 dark:text-gray-300 border border-slate-300 dark:border-[#2D3748] transition-all cursor-pointer"
             >
-              <Settings className="w-4 h-4" />
+              {theme === "dark" ? (
+                <Sun className="w-4 h-4 text-amber-400" />
+              ) : (
+                <Moon className="w-4 h-4 text-indigo-600" />
+              )}
             </button>
-          )}
+
+            {/* Settings Button */}
+            {onOpenSettings && (
+              <button
+                onClick={onOpenSettings}
+                title="설정 (Settings)"
+                className="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-[#171923] dark:hover:bg-[#2D3748] text-slate-700 dark:text-gray-300 border border-slate-300 dark:border-[#2D3748] transition-all cursor-pointer"
+              >
+                <Settings className="w-4 h-4" />
+              </button>
+            )}
+          </div>
         </div>
       </div>
 

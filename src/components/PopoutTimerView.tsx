@@ -7,11 +7,13 @@ import { generateKitCopyText } from "../utils/copyTextGenerator";
 import { isTauriEnvironment, setAlwaysOnTop, closeCurrentWindow } from "../utils/tauriWindow";
 import { getCurrentWindow, LogicalSize } from "@tauri-apps/api/window";
 
-const fmtDigitalTimer = (ms: number): string => {
+const fmtDigitalTimer = (ms: number) => {
   const total = Math.max(0, Math.floor(ms / 1000));
   const m = Math.floor(total / 60);
   const s = total % 60;
-  return `${pad2(m)}:${pad2(s)}`;
+  const msRem = Math.max(0, ms % 1000);
+  const msStr = String(Math.floor(msRem / 100));
+  return { main: `${pad2(m)}:${pad2(s)}`, ms: msStr };
 };
 
 /** Format epoch ms → "HH:MM:SS ET" */
@@ -66,6 +68,20 @@ export const PopoutTimerView: React.FC = () => {
     if (isTauriEnvironment()) {
       getCurrentWindow().setSize(new LogicalSize(240, 160)).catch(console.error);
     }
+    
+    // Clean up trackedPopouts when window closes
+    const handleUnload = () => {
+      try {
+        const symbol = new URLSearchParams(window.location.search).get("symbol");
+        if (symbol) {
+          const existing = JSON.parse(localStorage.getItem("trackedPopouts") || "[]");
+          const updated = existing.filter((s: string) => s !== symbol);
+          localStorage.setItem("trackedPopouts", JSON.stringify(updated));
+        }
+      } catch (e) {}
+    };
+    window.addEventListener("beforeunload", handleUnload);
+    return () => window.removeEventListener("beforeunload", handleUnload);
   }, []);
 
   // Set initial always-on-top if in Tauri
@@ -79,9 +95,9 @@ export const PopoutTimerView: React.FC = () => {
     if (isTauriEnvironment()) await setAlwaysOnTop(next);
   };
 
-  // Live timer tick using synced server time
+  // Live timer tick using synced server time (30ms for smooth ms rendering)
   useEffect(() => {
-    const timer = setInterval(() => setNowMs(getSyncedNow()), 200);
+    const timer = setInterval(() => setNowMs(getSyncedNow()), 30);
     return () => clearInterval(timer);
   }, []);
 
@@ -121,6 +137,22 @@ export const PopoutTimerView: React.FC = () => {
     const pollInterval = setInterval(checkStatus, 300);
     return () => clearInterval(pollInterval);
   }, [symbol]);
+
+  const prevIdRef = useRef<string | null>(null);
+  const [showNewHaltFlash, setShowNewHaltFlash] = useState(false);
+
+  // Detect when a completely new halt starts for the same symbol (ID change)
+  useEffect(() => {
+    if (liveItem) {
+      if (prevIdRef.current && prevIdRef.current !== liveItem.id) {
+        setShowNewHaltFlash(true);
+        // Play notification chime for the new halt
+        invoke("play_sound", { name: "notification" }).catch(() => {});
+        setTimeout(() => setShowNewHaltFlash(false), 3000);
+      }
+      prevIdRef.current = liveItem.id;
+    }
+  }, [liveItem?.id]);
 
   const name = liveItem?.name || initialName;
   const status = liveItem?.status || "halted";
@@ -213,7 +245,13 @@ export const PopoutTimerView: React.FC = () => {
 
       {/* Main Timer Body */}
       <div className="relative z-10 flex-1 flex flex-col items-center justify-center p-1 sm:p-2 min-h-0 @container" data-tauri-drag-region>
-        {status === "resumed" || status === "quote_resumed" ? (
+        {showNewHaltFlash ? (
+          <div className="flex flex-col items-center justify-center h-full animate-pulse pointer-events-none">
+            <span className="text-[min(8cqw,20cqh)] font-black text-rose-400 tracking-tight mb-1 text-center leading-tight">
+              {getHaltCountForSymbolToday(allData, symbol, haltedEpoch)}회 킷 발동!
+            </span>
+          </div>
+        ) : status === "resumed" || status === "quote_resumed" ? (
           <div className="flex flex-col items-center justify-center h-full animate-fadeIn pointer-events-none">
             <CheckCircle2 className="w-[min(15cqw,30cqh)] h-[min(15cqw,30cqh)] text-emerald-400 mb-1 sm:mb-2 drop-shadow-[0_0_12px_rgba(52,211,153,0.4)]" />
             <span className="text-[min(8cqw,20cqh)] font-black text-emerald-400 tracking-tight">
@@ -237,10 +275,11 @@ export const PopoutTimerView: React.FC = () => {
                   window.open(url, "_blank");
                 }
               }}
-              className="text-[min(24cqw,58cqh)] leading-none font-black font-mono tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-white to-slate-400 drop-shadow-lg pointer-events-auto cursor-pointer hover:scale-[1.03] hover:from-blue-200 hover:to-blue-500 active:scale-[0.97] transition-all"
+              className="flex items-baseline justify-center text-transparent bg-clip-text bg-gradient-to-b from-white to-slate-400 drop-shadow-lg pointer-events-auto cursor-pointer hover:scale-[1.03] hover:from-blue-200 hover:to-blue-500 active:scale-[0.97] transition-all"
               title="토스증권에서 확인하기"
             >
-              {fmtDigitalTimer(rem)}
+              <span className="text-[min(24cqw,58cqh)] leading-none font-black font-mono tracking-tighter">{fmtDigitalTimer(rem).main}</span>
+              <span className="text-[min(10cqw,25cqh)] leading-none font-bold font-mono tracking-tighter opacity-70 ml-1 mb-[min(2cqw,4cqh)]">.{fmtDigitalTimer(rem).ms}</span>
             </div>
 
             {/* 몇 분 킷 */}
