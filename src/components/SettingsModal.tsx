@@ -52,7 +52,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   autostartEnabled,
   onToggleAutostart,
 }) => {
-  const [appVersion, setAppVersion] = useState<string>("1.0.3");
+  const [appVersion, setAppVersion] = useState<string>("1.0.5");
 
   useEffect(() => {
     if ((window as any).__TAURI_INTERNALS__) {
@@ -252,4 +252,3 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     </div>
   );
 };
-
