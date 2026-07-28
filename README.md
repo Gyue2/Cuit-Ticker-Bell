@@ -1,4 +1,4 @@
-# 🧚 Cuti-Ticker / KIT FAIRY (킷 요정)
+# 🔔 Cuit-Ticker / Cuit Ticker Bell (킷 요정)
 > **미국 주식(NASDAQ, NYSE, AMEX) 변동성 정지(Volatility Halt / LULD / 킷) 실시간 모니터링 & 카운트다운 타이머**
 
 NASDAQ, NYSE, AMEX 전 시장의 거래 정지 현황을 실시간으로 추적하고, 5분·10분·15분 재개 카운트다운 타이머, 음성 알림, 항상 위(Always-On-Top) 팝업 창 및 소식지 클립보드 복사 기능을 제공하는 웹 & 데스크톱 앱입니다.

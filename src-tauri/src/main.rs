@@ -210,7 +210,7 @@ async fn fetch_nasdaq_rss(app_handle: AppHandle) {
         let last_mod = state.last_modified.lock().await.clone();
 
         let mut headers = HeaderMap::new();
-        headers.insert(USER_AGENT, HeaderValue::from_static("Mozilla/5.0 (Windows NT 10.0; Win64; x64) KitFairy/2.0"));
+        headers.insert(USER_AGENT, HeaderValue::from_static("Mozilla/5.0 (Windows NT 10.0; Win64; x64) CuitTickerBell/2.0"));
         headers.insert(ACCEPT, HeaderValue::from_static("application/rss+xml, application/xml, text/xml, */*"));
         headers.insert(CONNECTION, HeaderValue::from_static("keep-alive"));
         

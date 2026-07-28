@@ -23,7 +23,7 @@ import { listen } from "@tauri-apps/api/event";
 import { invoke } from "@tauri-apps/api/core";
 import { check } from "@tauri-apps/plugin-updater";
 import { relaunch } from "@tauri-apps/plugin-process";
-const SETTINGS_KEY = "kitFairySettings_v2";
+const SETTINGS_KEY = "cuitTickerBellSettings_v2";
 
 export default function App() {
   const isPopoutView = useMemo(() => {

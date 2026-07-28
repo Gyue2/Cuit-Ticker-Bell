@@ -222,7 +222,7 @@ function fetchNasdaqRssStream(targetUrl = NASDAQ_RSS_URL, redirectCount = 0): Pr
 
     const startTime = Date.now();
     const reqHeaders: Record<string, string> = {
-      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) KitFairy/2.0",
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) CuitTickerBell/2.0",
       Accept: "application/rss+xml, application/xml, text/xml, */*",
       Connection: "keep-alive",
     };
@@ -517,7 +517,7 @@ async function startServer() {
   }
 
   server.listen(PORT, "0.0.0.0", () => {
-    console.log(`🚀 킷 요정 (Kit Fairy) Server running on http://0.0.0.0:${PORT}`);
+    console.log(`🚀 킷 요정 (Cuit Ticker Bell) Server running on http://0.0.0.0:${PORT}`);
     console.log(`⚡ Optimization Engine Active: Keep-Alive HTTP Pipeline + 304 Conditional GET`);
     console.log(`📡 NASDAQ RSS Feed Polling Active: ${NASDAQ_RSS_URL}`);
   });
