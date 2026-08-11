@@ -106,36 +106,67 @@ export const PopoutTimerView: React.FC = () => {
   const initialHalted = parseInt(params.get("halted") || Date.now().toString(), 10);
   const reasonCode = params.get("reason") || "LUDP";
 
-  // Poll server for status updates for this symbol and sync server time
+  // Listen to Tauri events or poll server for status updates
   useEffect(() => {
-    const checkStatus = async () => {
-      try {
-        const res = await fetch("/halts", { cache: "no-store" });
-        if (res.ok) {
-          const json = await res.json();
-          if (json.serverTime) {
-            updateServerTimeOffset(json.serverTime);
-            setNowMs(getSyncedNow());
-          }
-          if (Array.isArray(json.data)) {
-            setAllData(json.data);
-            const found = json.data.find((h: HaltItem) => h.symbol === symbol);
-            if (found) {
-              setLiveItem(found);
-            } else if (json.data.length > 0 && liveItem) {
-              // If it's no longer in the feed, assume it's resumed
-              setLiveItem({ ...liveItem, status: "resumed" });
-            }
-          }
+    let unlistenTauri: (() => void) | null = null;
+    let pollInterval: NodeJS.Timeout | null = null;
+
+    const handleNewData = (data: HaltItem[], serverTime?: number) => {
+      if (serverTime) {
+        updateServerTimeOffset(serverTime);
+        setNowMs(getSyncedNow());
+      }
+      setAllData(data);
+      const found = data.find((h) => h.symbol === symbol);
+      setLiveItem((prevLiveItem) => {
+        if (found) {
+          return found;
+        } else if (data.length > 0 && prevLiveItem) {
+          return { ...prevLiveItem, status: "resumed" };
         }
-      } catch (e) {
-        console.error("Popout poll error:", e);
+        return prevLiveItem;
+      });
+    };
+
+    const setup = async () => {
+      if (isTauriEnvironment()) {
+        try {
+          const { listen } = await import("@tauri-apps/api/event");
+          unlistenTauri = await listen("halt-data-update", (event: any) => {
+            const msg = event.payload;
+            if (msg.type === "data" && Array.isArray(msg.data)) {
+              handleNewData(msg.data, msg.serverTime);
+            }
+          });
+        } catch (e) {
+          console.error("Popout tauri listen error:", e);
+        }
+      } else {
+        const checkStatus = async () => {
+          try {
+            const res = await fetch("/halts", { cache: "no-store" });
+            if (res.ok) {
+              const json = await res.json();
+              if (Array.isArray(json.data)) {
+                handleNewData(json.data, json.serverTime);
+              }
+            }
+          } catch (e) {
+            console.error("Popout poll error:", e);
+          }
+        };
+
+        checkStatus();
+        pollInterval = setInterval(checkStatus, 300);
       }
     };
 
-    checkStatus();
-    const pollInterval = setInterval(checkStatus, 300);
-    return () => clearInterval(pollInterval);
+    setup();
+
+    return () => {
+      if (pollInterval) clearInterval(pollInterval);
+      if (unlistenTauri) unlistenTauri();
+    };
   }, [symbol]);
 
   const prevIdRef = useRef<string | null>(null);
