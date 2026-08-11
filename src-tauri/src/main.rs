@@ -523,6 +523,7 @@ fn main() {
             tauri_plugin_autostart::MacosLauncher::LaunchAgent,
             Some(vec!["--minimized"]),
         ))
+        .plugin(tauri_plugin_window_state::Builder::default().build())
         .plugin(tauri_plugin_updater::Builder::new().build())
         .manage(app_state)
         .setup(|app| {
@@ -531,7 +532,8 @@ fn main() {
             // Create Tray Menu
             let quit_i = MenuItem::with_id(app, "quit", "종료", true, None::<&str>)?;
             let show_i = MenuItem::with_id(app, "show", "열기", true, None::<&str>)?;
-            let menu = Menu::with_items(app, &[&show_i, &quit_i])?;
+            let reset_i = MenuItem::with_id(app, "reset_window", "위치/크기 초기화", true, None::<&str>)?;
+            let menu = Menu::with_items(app, &[&show_i, &reset_i, &quit_i])?;
 
             let _tray = TrayIconBuilder::new()
                 .icon(app.default_window_icon().unwrap().clone())
@@ -540,6 +542,14 @@ fn main() {
                 .on_menu_event(|app, event| match event.id.as_ref() {
                     "quit" => {
                         app.exit(0);
+                    }
+                    "reset_window" => {
+                        if let Some(window) = app.get_webview_window("main") {
+                            let _ = window.set_size(tauri::Size::Logical(tauri::LogicalSize { width: 1280.0, height: 840.0 }));
+                            let _ = window.center();
+                            let _ = window.show();
+                            let _ = window.set_focus();
+                        }
                     }
                     "show" => {
                         if let Some(window) = app.get_webview_window("main") {
