@@ -103,7 +103,7 @@ export const PopoutTimerView: React.FC = () => {
 
   const symbol = params.get("symbol") || "UNKNOWN";
   const initialName = params.get("name") || "";
-  const initialHalted = parseInt(params.get("halted") || Date.now().toString(), 10);
+  const initialHalted = parseInt(params.get("haltedAt") || params.get("halted") || Date.now().toString(), 10);
   const reasonCode = params.get("reason") || "LUDP";
 
   // Listen to Tauri events or poll server for status updates
