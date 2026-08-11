@@ -17,6 +17,8 @@
     "core:window:allow-set-size",
     "core:window:allow-set-position",
     "notification:default",
-    "autostart:default"
+    "autostart:default",
+    "updater:default",
+    "process:default"
   ]
 }
