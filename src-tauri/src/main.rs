@@ -454,8 +454,12 @@ async fn set_filters(filters: Vec<String>, state: State<'_, AppState>) -> Result
 fn open_url(url: String) {
     #[cfg(target_os = "windows")]
     {
+        use std::os::windows::process::CommandExt;
         let safe_url = url.replace("&", "^&");
-        let _ = std::process::Command::new("cmd").args(["/C", "start", "", &safe_url]).spawn();
+        let _ = std::process::Command::new("cmd")
+            .args(["/C", "start", "", &safe_url])
+            .creation_flags(0x08000000)
+            .spawn();
     }
     #[cfg(target_os = "macos")]
     {
