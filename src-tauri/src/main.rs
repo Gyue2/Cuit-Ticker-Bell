@@ -545,6 +545,8 @@ fn main() {
                 .menu_on_left_click(false)
                 .on_menu_event(|app, event| match event.id.as_ref() {
                     "quit" => {
+                        use tauri_plugin_window_state::{AppHandleExt, StateFlags};
+                        let _ = app.save_window_state(StateFlags::all());
                         app.exit(0);
                     }
                     "reset_window" => {
