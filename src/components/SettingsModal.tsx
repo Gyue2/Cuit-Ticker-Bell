@@ -33,6 +33,15 @@ interface SettingsModalProps {
   
   // Update
   updateProgress?: { status: string; progress: number } | null;
+  
+  // Telegram
+  telegramEnabled: boolean;
+  onToggleTelegram: () => void;
+  telegramToken: string;
+  onChangeTelegramToken: (token: string) => void;
+  telegramChatId: string;
+  onChangeTelegramChatId: (chatId: string) => void;
+  onTestTelegram: () => void;
 }
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({
@@ -55,6 +64,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   autostartEnabled,
   onToggleAutostart,
   updateProgress,
+  telegramEnabled,
+  onToggleTelegram,
+  telegramToken,
+  onChangeTelegramToken,
+  telegramChatId,
+  onChangeTelegramChatId,
+  onTestTelegram,
 }) => {
   const [appVersion, setAppVersion] = useState<string>("1.0.7");
 
@@ -186,6 +202,66 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                       className="flex-1 h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer dark:bg-slate-700 accent-purple-500"
                     />
                     <span className="text-[11px] font-mono text-slate-500 w-8 text-right">{Math.round(ttsVolume * 100)}%</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </section>
+
+          {/* Section: Telegram Notifications */}
+          <section className="space-y-4">
+            <h3 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">모바일 알림 (Telegram)</h3>
+            <div className="space-y-3">
+              <div className="flex flex-col gap-3 p-4 rounded-xl bg-slate-50 dark:bg-[#2D3748]/30 border border-slate-100 dark:border-slate-700/50">
+                <div className="flex items-center justify-between">
+                  <div className="flex flex-col">
+                    <span className="text-sm font-bold text-slate-700 dark:text-slate-300">텔레그램 봇 알림</span>
+                    <span className="text-[10px] text-slate-500">외부에 있을 때도 폰으로 실시간 알림을 받습니다.</span>
+                  </div>
+                  <button
+                    onClick={onToggleTelegram}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors border ${
+                      telegramEnabled 
+                        ? "bg-blue-100 text-blue-600 border-blue-200 dark:bg-blue-500/20 dark:text-blue-400 dark:border-blue-500/30" 
+                        : "bg-slate-200 text-slate-500 border-slate-300 dark:bg-slate-700 dark:text-slate-400 dark:border-slate-600"
+                    }`}
+                  >
+                    {telegramEnabled ? "사용 중" : "사용 안 함"}
+                  </button>
+                </div>
+                
+                {telegramEnabled && (
+                  <div className="flex flex-col gap-3 pt-3 border-t border-slate-200 dark:border-slate-700">
+                    <div className="flex flex-col gap-1">
+                      <label className="text-xs font-bold text-slate-600 dark:text-slate-400">Bot Token (봇 토큰)</label>
+                      <input
+                        type="password"
+                        placeholder="123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11"
+                        value={telegramToken}
+                        onChange={(e) => onChangeTelegramToken(e.target.value)}
+                        className="w-full text-sm bg-white dark:bg-[#1A202C] text-slate-800 dark:text-slate-200 px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 focus:outline-none focus:border-blue-500"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <label className="text-xs font-bold text-slate-600 dark:text-slate-400">Chat ID (채팅방 ID)</label>
+                      <input
+                        type="text"
+                        placeholder="123456789"
+                        value={telegramChatId}
+                        onChange={(e) => onChangeTelegramChatId(e.target.value)}
+                        className="w-full text-sm bg-white dark:bg-[#1A202C] text-slate-800 dark:text-slate-200 px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 focus:outline-none focus:border-blue-500"
+                      />
+                    </div>
+                    <button
+                      onClick={onTestTelegram}
+                      className="mt-1 w-full px-4 py-2 bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-500/20 font-bold text-xs rounded-lg transition-colors border border-blue-200 dark:border-blue-500/30"
+                    >
+                      테스트 메시지 보내기
+                    </button>
+                    <span className="text-[10px] text-slate-400 dark:text-slate-500 leading-tight">
+                      * 텔레그램에서 BotFather를 통해 봇을 생성한 후 Token을 입력하세요.<br/>
+                      * 봇에게 말을 건 후 IDBot 등을 통해 자신의 Chat ID를 확인해 입력하세요.
+                    </span>
                   </div>
                 )}
               </div>

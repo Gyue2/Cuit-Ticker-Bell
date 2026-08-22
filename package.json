@@ -1,7 +1,8 @@
 {
-  "name": "cuti-ticker",
+  "name": "cuit-ticker-bell",
   "private": true,
-  "version": "1.1.6",
+  "version": "1.1.7",
+  "description": "Real-time Nasdaq volatility halt monitor",
   "type": "module",
   "scripts": {
     "dev": "tsx server.ts",

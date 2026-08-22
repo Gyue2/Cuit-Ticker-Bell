@@ -61,6 +61,11 @@ export default function App() {
   const [isFlashing, setIsFlashing] = useState(false);
   const [autostartEnabled, setAutostartEnabled] = useState(false);
   
+  // Telegram State
+  const [telegramEnabled, setTelegramEnabled] = useState<boolean>(false);
+  const [telegramToken, setTelegramToken] = useState<string>("");
+  const [telegramChatId, setTelegramChatId] = useState<string>("");
+  
   // App Update state
   const [updateProgress, setUpdateProgress] = useState<{ status: string; progress: number } | null>(null);
 
@@ -93,6 +98,10 @@ export default function App() {
   const watchedSymbolsRef = useRef<Set<string>>(new Set());
   const ignoredSymbolsRef = useRef<Set<string>>(new Set());
   
+  const telegramEnabledRef = useRef<boolean>(false);
+  const telegramTokenRef = useRef<string>("");
+  const telegramChatIdRef = useRef<string>("");
+  
   useEffect(() => { soundEnabledRef.current = soundEnabled; }, [soundEnabled]);
   useEffect(() => { chimeVolumeRef.current = chimeVolume; }, [chimeVolume]);
   useEffect(() => { ttsEnabledRef.current = ttsEnabled; }, [ttsEnabled]);
@@ -100,6 +109,9 @@ export default function App() {
   useEffect(() => { soundTypeRef.current = soundType; }, [soundType]);
   useEffect(() => { watchedSymbolsRef.current = watchedSymbols; }, [watchedSymbols]);
   useEffect(() => { ignoredSymbolsRef.current = ignoredSymbols; }, [ignoredSymbols]);
+  useEffect(() => { telegramEnabledRef.current = telegramEnabled; }, [telegramEnabled]);
+  useEffect(() => { telegramTokenRef.current = telegramToken; }, [telegramToken]);
+  useEffect(() => { telegramChatIdRef.current = telegramChatId; }, [telegramChatId]);
 
   // Clear tracked popouts on app startup
   useEffect(() => {
@@ -149,6 +161,9 @@ export default function App() {
         if (Array.isArray(parsed.ignoredSymbols)) {
           setIgnoredSymbols(new Set(parsed.ignoredSymbols));
         }
+        if (typeof parsed.telegramEnabled === "boolean") setTelegramEnabled(parsed.telegramEnabled);
+        if (parsed.telegramToken) setTelegramToken(parsed.telegramToken);
+        if (parsed.telegramChatId) setTelegramChatId(parsed.telegramChatId);
       }
     } catch (e) {
       console.error("Failed to load settings:", e);
@@ -186,6 +201,9 @@ export default function App() {
           watchlistOnly,
           watchedSymbols: Array.from(watchedSymbols),
           ignoredSymbols: Array.from(ignoredSymbols),
+          telegramEnabled,
+          telegramToken,
+          telegramChatId,
           ...newSettings,
         };
         localStorage.setItem(SETTINGS_KEY, JSON.stringify(current));
@@ -193,7 +211,7 @@ export default function App() {
         console.error("Failed to save settings:", e);
       }
     },
-    [theme, intervalMs, soundEnabled, chimeVolume, ttsEnabled, ttsVolume, watchlistOnly, watchedSymbols, ignoredSymbols]
+    [theme, intervalMs, soundEnabled, chimeVolume, ttsEnabled, ttsVolume, watchlistOnly, watchedSymbols, ignoredSymbols, telegramEnabled, telegramToken, telegramChatId]
   );
 
   // Autostart init
@@ -418,6 +436,14 @@ export default function App() {
                     }
                   } catch(e) {}
                 }
+                
+                // Telegram Notification
+                if (telegramEnabledRef.current && telegramTokenRef.current && telegramChatIdRef.current) {
+                  const reason = h.reasons[0]?.title || code;
+                  const text = `🚨 <b>[Cuit Ticker Bell]</b>\n\n<b>${h.symbol}</b> 킷 발동!\n${h.name}\n${h.market} - ${reason}`;
+                  invoke("send_telegram_message", { token: telegramTokenRef.current, chatId: telegramChatIdRef.current, text })
+                    .catch(e => console.error("Telegram send error:", e));
+                }
               }
             }
           }
@@ -449,6 +475,13 @@ export default function App() {
                 }
               } catch (e) {}
               showToast(`🔔 ${h.symbol} 거래정지 해제!`, "success");
+              
+              // Telegram Notification
+              if (telegramEnabledRef.current && telegramTokenRef.current && telegramChatIdRef.current) {
+                const text = `✅ <b>[Cuit Ticker Bell]</b>\n\n<b>${h.symbol}</b> 거래정지 해제!\n정상 거래가 재개되었습니다.`;
+                invoke("send_telegram_message", { token: telegramTokenRef.current, chatId: telegramChatIdRef.current, text })
+                  .catch(e => console.error("Telegram resume error:", e));
+              }
             }
           }
         }
@@ -621,6 +654,28 @@ export default function App() {
     setTtsEnabled(next);
     saveSettings({ ttsEnabled: next });
     showToast(next ? "TTS 안내가 켜졌습니다." : "TTS 안내가 꺼졌습니다.", "info");
+  };
+  
+  const handleToggleTelegram = () => {
+    const next = !telegramEnabled;
+    setTelegramEnabled(next);
+    saveSettings({ telegramEnabled: next });
+    showToast(next ? "텔레그램 알림 기능 활성화" : "텔레그램 알림 기능 비활성화", "info");
+  };
+
+  const handleTestTelegram = async () => {
+    if (!telegramToken || !telegramChatId) {
+      showToast("Bot Token과 Chat ID를 모두 입력해주세요.", "warning");
+      return;
+    }
+    try {
+      showToast("텔레그램 메시지를 전송합니다...", "info");
+      const text = `🔔 <b>[Cuit Ticker Bell]</b>\n테스트 메시지입니다.\n이 메시지가 잘 보인다면 설정이 완료된 것입니다! 🎉`;
+      await invoke("send_telegram_message", { token: telegramToken, chatId: telegramChatId, text });
+      showToast("텔레그램 메시지 전송 성공!", "success");
+    } catch (e: any) {
+      showToast(`전송 실패: ${e.toString()}`, "warning");
+    }
   };
 
   const handleToggleWatchlistOnly = () => {
@@ -814,7 +869,7 @@ export default function App() {
           soundEnabled={soundEnabled}
           onToggleSound={handleToggleSound}
           soundType={soundType}
-          onChangeSoundType={setSoundType}
+          onChangeSoundType={(t) => { setSoundType(t); saveSettings({ soundType: t }); }}
           chimeVolume={chimeVolume}
           onChangeChimeVolume={(v) => { setChimeVolume(v); saveSettings({ chimeVolume: v }); }}
           ttsEnabled={ttsEnabled}
@@ -824,6 +879,13 @@ export default function App() {
           autostartEnabled={autostartEnabled}
           onToggleAutostart={handleToggleAutostart}
           updateProgress={updateProgress}
+          telegramEnabled={telegramEnabled}
+          onToggleTelegram={handleToggleTelegram}
+          telegramToken={telegramToken}
+          onChangeTelegramToken={(v) => { setTelegramToken(v); saveSettings({ telegramToken: v }); }}
+          telegramChatId={telegramChatId}
+          onChangeTelegramChatId={(v) => { setTelegramChatId(v); saveSettings({ telegramChatId: v }); }}
+          onTestTelegram={handleTestTelegram}
         />
 
         {/* Stats Summary Cards */}

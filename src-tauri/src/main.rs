@@ -472,6 +472,27 @@ fn open_url(url: String) {
 }
 
 #[tauri::command]
+async fn send_telegram_message(token: String, chat_id: String, text: String) -> Result<(), String> {
+    let url = format!("https://api.telegram.org/bot{}/sendMessage", token);
+    let client = reqwest::Client::new();
+    let mut map = std::collections::HashMap::new();
+    map.insert("chat_id", chat_id);
+    map.insert("text", text);
+    map.insert("parse_mode", "HTML".to_string());
+    
+    match client.post(&url).json(&map).send().await {
+        Ok(res) => {
+            if res.status().is_success() {
+                Ok(())
+            } else {
+                Err(format!("Telegram API error: {}", res.status()))
+            }
+        }
+        Err(e) => Err(e.to_string()),
+    }
+}
+
+#[tauri::command]
 fn open_popout(app: tauri::AppHandle, label: String, url: String, title: String) {
     if let Some(_) = app.get_webview_window(&label) {
         return;
@@ -597,7 +618,7 @@ fn main() {
                 }
             }
         })
-        .invoke_handler(tauri::generate_handler![set_filters, open_url, open_popout])
+        .invoke_handler(tauri::generate_handler![set_filters, open_url, open_popout, send_telegram_message])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
