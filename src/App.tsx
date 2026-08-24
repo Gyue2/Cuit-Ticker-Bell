@@ -440,7 +440,23 @@ export default function App() {
                 // Telegram Notification
                 if (telegramEnabledRef.current && telegramTokenRef.current && telegramChatIdRef.current) {
                   const reason = h.reasons[0]?.title || code;
-                  const text = `🚨 <b>[Cuit Ticker Bell]</b>\n\n<b>${h.symbol}</b> 킷 발동!\n${h.name}\n${h.market} - ${reason}`;
+                  const haltedMs = h.halted_at_epoch_ms || Date.now();
+                  const haltedDate = new Date(haltedMs);
+                  const pad = (n: number) => String(n).padStart(2, "0");
+                  const haltTimeStr = `${pad(haltedDate.getHours())}:${pad(haltedDate.getMinutes())}:${pad(haltedDate.getSeconds())}`;
+                  
+                  // Expected resume times (5, 10, 15 mins)
+                  const fmt = (ms: number) => {
+                    const d = new Date(ms);
+                    return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+                  };
+                  const res5 = fmt(haltedMs + 5 * 60 * 1000);
+                  const res10 = fmt(haltedMs + 10 * 60 * 1000);
+                  const res15 = fmt(haltedMs + 15 * 60 * 1000);
+                  
+                  const tossLink = `https://www.tossinvest.com/stocks/${h.symbol}`;
+                  
+                  const text = `🚨 <b>[Cuit Ticker Bell]</b>\n\n<b>${h.symbol}</b> 킷 발동!\n${h.name}\n${h.market} - ${reason}\n\n🕒 <b>정지 시간:</b> ${haltTimeStr}\n⏳ <b>예상 해제:</b> ${res5} (5분) / ${res10} (10분)\n\n🔗 <a href="${tossLink}">토스증권 바로가기</a>`;
                   invoke("send_telegram_message", { token: telegramTokenRef.current, chatId: telegramChatIdRef.current, text })
                     .catch(e => console.error("Telegram send error:", e));
                 }
@@ -478,7 +494,13 @@ export default function App() {
               
               // Telegram Notification
               if (telegramEnabledRef.current && telegramTokenRef.current && telegramChatIdRef.current) {
-                const text = `✅ <b>[Cuit Ticker Bell]</b>\n\n<b>${h.symbol}</b> 거래정지 해제!\n정상 거래가 재개되었습니다.`;
+                const pad = (n: number) => String(n).padStart(2, "0");
+                const resumedMs = h.resumed_at_epoch_ms || Date.now();
+                const d = new Date(resumedMs);
+                const resumeTimeStr = `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+                const tossLink = `https://www.tossinvest.com/stocks/${h.symbol}`;
+                
+                const text = `✅ <b>[Cuit Ticker Bell]</b>\n\n<b>${h.symbol}</b> 거래정지 해제!\n🕒 <b>해제 시간:</b> ${resumeTimeStr}\n정상 거래가 재개되었습니다.\n\n🔗 <a href="${tossLink}">토스증권 바로가기</a>`;
                 invoke("send_telegram_message", { token: telegramTokenRef.current, chatId: telegramChatIdRef.current, text })
                   .catch(e => console.error("Telegram resume error:", e));
               }
