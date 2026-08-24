@@ -440,7 +440,7 @@ export default function App() {
                 // Telegram Notification
                 if (telegramEnabledRef.current && telegramTokenRef.current && telegramChatIdRef.current) {
                   const reason = h.reasons[0]?.title || code;
-                  const haltedMs = h.halted_at_epoch_ms || Date.now();
+                  const haltedMs = h.halted_at_epoch_ms || getSyncedNow();
                   const haltedDate = new Date(haltedMs);
                   const pad = (n: number) => String(n).padStart(2, "0");
                   const haltTimeStr = `${pad(haltedDate.getHours())}:${pad(haltedDate.getMinutes())}:${pad(haltedDate.getSeconds())}`;
@@ -454,9 +454,15 @@ export default function App() {
                   const res10 = fmt(haltedMs + 10 * 60 * 1000);
                   const res15 = fmt(haltedMs + 15 * 60 * 1000);
                   
+                  // Generate Kit Copy Text for sharing
+                  const targetCount = getHaltCountForSymbolToday(dataRef.current, h.symbol, haltedMs);
+                  const intervals = getKitIntervals(haltedMs, getSyncedNow());
+                  const addMsArr = intervals.map((mn) => haltedMs + mn * 60 * 1000);
+                  const kitCopyText = generateKitCopyText(h.symbol, h.name, targetCount, addMsArr, intervals, code);
+                  
                   const tossLink = `https://www.tossinvest.com/stocks/${h.symbol}`;
                   
-                  const text = `🚨 <b>[Cuit Ticker Bell]</b>\n\n<b>${h.symbol}</b> 킷 발동!\n${h.name}\n${h.market} - ${reason}\n\n🕒 <b>정지 시간:</b> ${haltTimeStr}\n⏳ <b>예상 해제:</b> ${res5} (5분) / ${res10} (10분)\n\n🔗 <a href="${tossLink}">토스증권 바로가기</a>`;
+                  const text = `🚨 <b>[Cuit Ticker Bell]</b>\n\n<b>${h.symbol}</b> 킷 발동!\n${h.name}\n${h.market} - ${reason}\n\n🕒 <b>정지 시간:</b> ${haltTimeStr}\n⏳ <b>예상 해제:</b> ${res5} (5분) / ${res10} (10분)\n\n🔗 <a href="${tossLink}">토스증권 바로가기</a>\n\n💬 <b>종토방 공유용 문구 (아래 네모칸 터치 시 즉시 복사):</b>\n<code>${kitCopyText}</code>`;
                   invoke("send_telegram_message", { token: telegramTokenRef.current, chatId: telegramChatIdRef.current, text })
                     .catch(e => console.error("Telegram send error:", e));
                 }
