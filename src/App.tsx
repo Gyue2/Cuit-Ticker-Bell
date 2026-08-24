@@ -461,8 +461,9 @@ export default function App() {
                   const kitCopyText = generateKitCopyText(h.symbol, h.name, targetCount, addMsArr, intervals, code);
                   
                   const tossLink = `https://www.tossinvest.com/stocks/${h.symbol}`;
+                  const deepLink = `supertoss://toss/securities/stock?ticker=${h.symbol}`;
                   
-                  const text = `🚨 <b>[Cuit Ticker Bell]</b>\n\n<b>${h.symbol}</b> 킷 발동!\n${h.name}\n${h.market} - ${reason}\n\n🕒 <b>정지 시간:</b> ${haltTimeStr}\n⏳ <b>예상 해제:</b> ${res5} (5분) / ${res10} (10분)\n\n🔗 <a href="${tossLink}">토스증권 바로가기</a>\n\n💬 <b>종토방 공유용 문구 (아래 네모칸 터치 시 즉시 복사):</b>\n<code>${kitCopyText}</code>`;
+                  const text = `🚨 <b>[Cuit Ticker Bell]</b>\n\n<b>${h.symbol}</b> 킷 발동!\n${h.name}\n${h.market} - ${reason}\n\n🕒 <b>정지 시간:</b> ${haltTimeStr}\n⏳ <b>예상 해제:</b> ${res5} (5분) / ${res10} (10분)\n\n📱 <b>토스 앱으로 바로가기:</b>\n(아래 영문 주소를 터치해 복사 후, 사파리/크롬 주소창에 붙여넣으세요)\n<code>${deepLink}</code>\n\n🌐 <a href="${tossLink}">토스증권 웹으로 보기</a>\n*(텔레그램 안에서 웹이 켜질 경우, 우측 위 메뉴(⋮)에서 '다른 브라우저로 열기'를 누르시면 토스 앱이 켜집니다)*\n\n💬 <b>종토방 공유용 문구 (아래 네모칸 터치 시 즉시 복사):</b>\n<code>${kitCopyText}</code>`;
                   invoke("send_telegram_message", { token: telegramTokenRef.current, chatId: telegramChatIdRef.current, text })
                     .catch(e => console.error("Telegram send error:", e));
                 }
@@ -506,7 +507,7 @@ export default function App() {
                 const resumeTimeStr = `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
                 const tossLink = `https://www.tossinvest.com/stocks/${h.symbol}`;
                 
-                const text = `✅ <b>[Cuit Ticker Bell]</b>\n\n<b>${h.symbol}</b> 거래정지 해제!\n🕒 <b>해제 시간:</b> ${resumeTimeStr}\n정상 거래가 재개되었습니다.\n\n🔗 <a href="${tossLink}">토스증권 바로가기</a>`;
+                const text = `✅ <b>[Cuit Ticker Bell]</b>\n\n<b>${h.symbol}</b> 거래정지 해제!\n🕒 <b>해제 시간:</b> ${resumeTimeStr}\n정상 거래가 재개되었습니다.\n\n🌐 <a href="${tossLink}">토스증권 웹으로 보기</a>\n*(텔레그램 안에서 웹이 켜질 경우, 우측 위 메뉴(⋮)에서 '다른 브라우저로 열기'를 누르시면 토스 앱이 켜집니다)*`;
                 invoke("send_telegram_message", { token: telegramTokenRef.current, chatId: telegramChatIdRef.current, text })
                   .catch(e => console.error("Telegram resume error:", e));
               }
