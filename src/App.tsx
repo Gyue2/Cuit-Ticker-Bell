@@ -460,10 +460,13 @@ export default function App() {
                   const addMsArr = intervals.map((mn) => haltedMs + mn * 60 * 1000);
                   const kitCopyText = generateKitCopyText(h.symbol, h.name, targetCount, addMsArr, intervals, code);
                   
-                  const tossLink = `https://www.tossinvest.com/stocks/${h.symbol}`;
-                  const deepLink = `supertoss://toss/securities/stock?ticker=${h.symbol}`;
+                  // Removed PC Link as requested
+                  // const tossLink = `https://www.tossinvest.com/stocks/${h.symbol}`;
                   
-                  const text = `🚨 <b>[Cuit Ticker Bell]</b>\n\n<b>${h.symbol}</b> 킷 발동!\n${h.name}\n${h.market} - ${reason}\n\n🕒 <b>정지 시간:</b> ${haltTimeStr}\n⏳ <b>예상 해제:</b> ${res5} (5분) / ${res10} (10분)\n\n📱 <b>토스 앱으로 바로가기:</b>\n(아래 영문 주소를 터치해 복사 후, 사파리/크롬 주소창에 붙여넣으세요)\n<code>${deepLink}</code>\n\n🌐 <a href="${tossLink}">토스증권 웹으로 보기</a>\n*(텔레그램 안에서 웹이 켜질 경우, 우측 위 메뉴(⋮)에서 '다른 브라우저로 열기'를 누르시면 토스 앱이 켜집니다)*\n\n💬 <b>종토방 공유용 문구 (아래 네모칸 터치 시 즉시 복사):</b>\n<code>${kitCopyText}</code>`;
+                  // Pending exact Toss deep link format from user
+                  const deepLink = `https://tossinvest.com/stocks/${h.symbol}`;
+                  
+                  const text = `🚨 <b>[Cuit Ticker Bell]</b>\n\n<b>${h.symbol}</b> 킷 발동!\n${h.name}\n${h.market} - ${reason}\n\n🕒 <b>정지 시간:</b> ${haltTimeStr}\n⏳ <b>예상 해제:</b> ${res5} (5분) / ${res10} (10분)\n\n📱 <b>토스증권 앱으로 열기:</b>\n<code>${deepLink}</code>\n\n💬 <b>종토방 공유용 문구 (터치 시 복사):</b>\n<code>${kitCopyText}</code>`;
                   invoke("send_telegram_message", { token: telegramTokenRef.current, chatId: telegramChatIdRef.current, text })
                     .catch(e => console.error("Telegram send error:", e));
                 }
@@ -499,7 +502,8 @@ export default function App() {
               } catch (e) {}
               showToast(`🔔 ${h.symbol} 거래정지 해제!`, "success");
               
-              // Telegram Notification
+              // Telegram Notification for Resume disabled per user request
+              /*
               if (telegramEnabledRef.current && telegramTokenRef.current && telegramChatIdRef.current) {
                 const pad = (n: number) => String(n).padStart(2, "0");
                 const resumedMs = h.resumed_at_epoch_ms || Date.now();
@@ -511,6 +515,7 @@ export default function App() {
                 invoke("send_telegram_message", { token: telegramTokenRef.current, chatId: telegramChatIdRef.current, text })
                   .catch(e => console.error("Telegram resume error:", e));
               }
+              */
             }
           }
         }
